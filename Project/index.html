@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ExpirySense - SSL Certificate Expiry Watcher</title>
+  <!-- Tailwind CSS Support -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js Support for Data Visualizations -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Custom Styling -->
+  <link rel="stylesheet" href="/frontend/style.css">
+</head>
+<body class="bg-[#0B0F1A] text-slate-300 min-h-screen flex flex-col font-sans selection:bg-cyan-500 selection:text-white">
+
+  <!-- Header Section -->
+  <header class="border-b border-slate-800 bg-[#0B0F1A]/90 backdrop-blur-md sticky top-0 z-40 px-6 py-4">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="text-2xl font-bold text-white flex items-center gap-2">
+          <span class="text-cyan-500">◈</span>
+        </div>
+        <div>
+          <h1 id="app-title" class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+            EXPIRYSENSE
+            <span class="text-xs font-mono px-2 py-0.5 bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded-full">v1.0.0</span>
+          </h1>
+          <p class="text-xs font-mono uppercase tracking-[0.2em] text-slate-500">SSL Certificate Expiry Watcher</p>
+        </div>
+      </div>
+
+      <!-- Action Buttons (remain disabled until data is loaded) -->
+      <div class="flex flex-wrap items-center gap-3">
+        <button id="btn-download-csv" disabled class="px-4 py-2 bg-slate-800 border border-slate-700 text-xs font-semibold rounded hover:bg-slate-700 hover:text-white transition-colors flex items-center gap-2 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-slate-900 disabled:border-slate-800 disabled:text-slate-500 cursor-pointer">
+          <i data-lucide="download" class="w-4 h-4"></i>
+          DOWNLOAD CSV
+        </button>
+        <button id="btn-download-md" disabled class="px-4 py-2 bg-cyan-600 border border-cyan-500 text-white text-xs font-bold rounded hover:bg-cyan-500 transition-colors flex items-center gap-2 shadow-[0_0_15px_rgba(8,145,178,0.3)] disabled:bg-slate-800 disabled:border-slate-700 disabled:text-slate-500 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer">
+          <i data-lucide="file-text" class="w-4 h-4"></i>
+          DOWNLOAD AI WORKBOOK
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Dashboard Container -->
+  <main class="flex-1 w-full max-w-7xl mx-auto px-6 py-8 flex flex-col gap-8">
+    
+    <!-- Top Row: Input Methods & Stat Cards -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      
+      <!-- Input Control Section (5 Columns) -->
+      <section class="lg:col-span-5 bg-slate-900/50 border border-slate-800 rounded-xl p-6 flex flex-col gap-6 shadow-xl relative overflow-hidden backdrop-blur-sm">
+        <div class="absolute top-0 left-0 w-1 h-full bg-cyan-500"></div>
+        
+        <div class="flex justify-between items-start">
+          <div>
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              <i data-lucide="plus-circle" class="w-5 h-5 text-cyan-500"></i>
+              TARGET HOSTNAMES
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">Configure individual domains or upload a CSV file to begin scanning.</p>
+          </div>
+          <span class="text-[9px] font-mono text-cyan-500 bg-cyan-500/10 px-2 py-0.5 border border-cyan-500/20 rounded">GROQ ACTIVE</span>
+        </div>
+
+        <!-- Input Tab Navigation -->
+        <div class="flex border-b border-slate-800">
+          <button id="tab-manual" class="px-4 py-2 text-sm font-medium text-cyan-500 border-b-2 border-cyan-500 transition-all focus:outline-none flex items-center gap-2 cursor-pointer">
+            <i data-lucide="keyboard" class="w-4 h-4"></i>
+            Manual Entry
+          </button>
+          <button id="tab-csv" class="px-4 py-2 text-sm font-medium text-slate-400 hover:text-slate-200 hover:border-slate-700 transition-all focus:outline-none flex items-center gap-2 cursor-pointer border-b-2 border-transparent">
+            <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+            CSV Upload
+          </button>
+        </div>
+
+        <!-- Tab 1: Manual Content -->
+        <div id="content-manual" class="flex flex-col gap-4 flex-1">
+          <div class="flex flex-col gap-2">
+            <label for="hostnames-input" class="text-xs font-mono uppercase text-slate-500 tracking-wider">Hostnames (one per line)</label>
+            <textarea id="hostnames-input" rows="6" placeholder="google.com&#10;github.com&#10;amazon.com&#10;cloudflare.com" class="w-full bg-[#050810] border border-slate-700 rounded p-3 text-xs font-mono text-cyan-400 focus:outline-none focus:border-cyan-600 focus:ring-1 focus:ring-cyan-500/30 placeholder-slate-700 transition-all resize-none"></textarea>
+          </div>
+          <p class="text-[11px] text-slate-500 flex items-center gap-1.5 leading-relaxed font-mono">
+            <i data-lucide="info" class="w-3.5 h-3.5 shrink-0 text-cyan-500/70"></i>
+            Duplicates and empty lines are automatically standardized.
+          </p>
+        </div>
+
+        <!-- Tab 2: CSV Content -->
+        <div id="content-csv" class="hidden flex flex-col gap-4 flex-1">
+          <div class="flex flex-col gap-2">
+            <span class="text-xs font-mono uppercase text-slate-500 tracking-wider">Upload CSV File</span>
+            <div id="csv-dropzone" class="border-2 border-dashed border-slate-800 hover:border-cyan-500/50 bg-slate-950/50 hover:bg-slate-950 rounded-xl p-8 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-3 group">
+              <input type="file" id="csv-file-input" accept=".csv" class="hidden">
+              <div class="p-3 bg-slate-900 border border-slate-800 rounded-lg text-slate-500 group-hover:text-cyan-500 group-hover:bg-cyan-500/5 transition-all">
+                <i data-lucide="file-spreadsheet" class="w-8 h-8"></i>
+              </div>
+              <div>
+                <p class="text-sm font-medium text-slate-200">Drag & drop your CSV file here</p>
+                <p class="text-xs text-slate-500 mt-1">or click to browse your files</p>
+              </div>
+              <div class="px-3 py-1 bg-slate-900 border border-slate-800 rounded text-[10px] font-mono text-slate-500">
+                Supports ONLY .csv
+              </div>
+            </div>
+            <div id="csv-feedback" class="hidden p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg text-xs flex items-start gap-1.5 leading-relaxed font-mono">
+              <i data-lucide="check-circle" class="w-4 h-4 shrink-0 mt-0.5"></i>
+              <div id="csv-feedback-text">CSV columns read successfully!</div>
+            </div>
+          </div>
+          
+          <div class="bg-[#050810] border border-slate-800/80 rounded-lg p-3">
+            <h4 class="text-xs font-semibold text-slate-400 flex items-center gap-1 font-mono uppercase tracking-wider">
+              <i data-lucide="file-question" class="w-3.5 h-3.5 text-amber-500"></i>
+              Expected File Format
+            </h4>
+            <p class="text-[10px] text-slate-500 mt-1 leading-relaxed font-mono">CSV file must contain a header row with a column named <code class="font-mono text-cyan-400 bg-slate-900 px-1 py-0.5 rounded border border-slate-800">hostname</code>. Example:</p>
+            <pre class="bg-slate-950 border border-slate-850 rounded p-1.5 text-[10px] font-mono text-slate-500 mt-1.5 overflow-x-auto leading-normal">hostname
+google.com
+github.com
+amazon.com</pre>
+          </div>
+        </div>
+
+        <div class="mt-auto pt-2 border-t border-slate-800/60 flex items-center justify-between gap-4">
+          <button id="btn-clear-input" class="px-3.5 py-2 border border-slate-700 bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 rounded text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+            RESET
+          </button>
+          <button id="btn-scan" class="flex-1 bg-white text-[#0B0F1A] text-[11px] font-bold py-2.5 rounded hover:bg-slate-200 transition duration-150 flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider">
+            <i data-lucide="zap" class="w-4 h-4"></i>
+            INITIALIZE LIVE SCAN
+          </button>
+        </div>
+      </section>
+
+      <!-- Stats Cards & Analytics (7 Columns) -->
+      <div class="lg:col-span-7 flex flex-col gap-6">
+        
+        <!-- Stats Grid (4 Cards) -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          
+          <!-- Card: Total Hostnames -->
+          <div class="bg-slate-900/50 border border-slate-800 p-4 rounded-lg relative overflow-hidden group">
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Total Hostnames</div>
+            <div id="stat-total" class="text-3xl font-mono text-white mt-1">0</div>
+            <div class="mt-2 h-1 bg-slate-800 rounded-full overflow-hidden">
+              <div class="h-full bg-cyan-500 w-full"></div>
+            </div>
+          </div>
+
+          <!-- Card: Critical Certificates -->
+          <div class="bg-slate-900/50 border border-slate-800 p-4 rounded-lg relative overflow-hidden group">
+            <div class="text-[10px] font-bold text-red-500/80 uppercase tracking-widest flex items-center gap-1">
+              <span class="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
+              Critical Risks (0-14d)
+            </div>
+            <div id="stat-critical" class="text-3xl font-mono text-white mt-1">0</div>
+            <div class="mt-2 h-1 bg-slate-800 rounded-full overflow-hidden">
+              <div id="stat-critical-bar" class="h-full bg-red-500 transition-all duration-500" style="width: 0%"></div>
+            </div>
+            <div class="absolute -right-2 -bottom-2 opacity-10">
+              <svg class="w-12 h-12 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+            </div>
+          </div>
+
+          <!-- Card: Warning Certificates -->
+          <div class="bg-slate-900/50 border border-slate-800 p-4 rounded-lg relative overflow-hidden group">
+            <div class="text-[10px] font-bold text-orange-500/80 uppercase tracking-widest flex items-center gap-1">
+              <span class="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
+              Warning (15-45d)
+            </div>
+            <div id="stat-warning" class="text-3xl font-mono text-white mt-1">0</div>
+            <div class="mt-2 h-1 bg-slate-800 rounded-full overflow-hidden">
+              <div id="stat-warning-bar" class="h-full bg-orange-500 transition-all duration-500" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- Card: Healthy Certificates -->
+          <div class="bg-slate-900/50 border border-slate-800 p-4 rounded-lg relative overflow-hidden group">
+            <div class="text-[10px] font-bold text-emerald-500/80 uppercase tracking-widest flex items-center gap-1">
+              <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+              Healthy (46+d)
+            </div>
+            <div id="stat-healthy" class="text-3xl font-mono text-white mt-1">0</div>
+            <div class="mt-2 h-1 bg-slate-800 rounded-full overflow-hidden">
+              <div id="stat-healthy-bar" class="h-full bg-emerald-500 transition-all duration-500" style="width: 0%"></div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Charts Grid (Two Side by Side) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1">
+          
+          <!-- Chart 1: Risk Distribution -->
+          <div class="bg-slate-900/50 border border-slate-800 rounded-lg p-5 shadow-lg flex flex-col justify-between">
+            <div>
+              <h3 class="text-xs font-bold uppercase text-slate-400 flex items-center gap-1.5">
+                <span class="text-cyan-500">◈</span>
+                Risk Distribution
+              </h3>
+              <p class="text-[10px] font-mono text-slate-500 mt-0.5">Certificates proportion by severity</p>
+            </div>
+            <div class="flex items-center justify-center p-2 relative h-[180px] w-full mt-4">
+              <!-- Empty state view -->
+              <div id="chart-risk-empty" class="absolute inset-0 flex flex-col items-center justify-center text-slate-650 gap-1.5 text-xs text-center font-mono uppercase tracking-wider">
+                <i data-lucide="pie-chart" class="w-8 h-8 opacity-35 text-cyan-500"></i>
+                No scan data available
+              </div>
+              <canvas id="chart-risk" class="max-h-full max-w-full hidden"></canvas>
+            </div>
+          </div>
+
+          <!-- Chart 2: Expiry Timeline -->
+          <div class="bg-slate-900/50 border border-slate-800 rounded-lg p-5 shadow-lg flex flex-col justify-between">
+            <div>
+              <h3 class="text-xs font-bold uppercase text-slate-400 flex items-center gap-1.5">
+                <span class="text-cyan-500">◈</span>
+                Expiry Timeline
+              </h3>
+              <p class="text-[10px] font-mono text-slate-500 mt-0.5">Distribution of remaining shelf days</p>
+            </div>
+            <div class="flex items-center justify-center p-2 relative h-[180px] w-full mt-4">
+              <!-- Empty state view -->
+              <div id="chart-timeline-empty" class="absolute inset-0 flex flex-col items-center justify-center text-slate-650 gap-1.5 text-xs text-center font-mono uppercase tracking-wider">
+                <i data-lucide="bar-chart-3" class="w-8 h-8 opacity-35 text-amber-500"></i>
+                No scan data available
+              </div>
+              <canvas id="chart-timeline" class="max-h-full max-w-full hidden"></canvas>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Alert Panel (Dynamic / informative) -->
+    <div id="api-status-banner" class="hidden p-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg text-xs items-center gap-2 font-mono">
+      <i data-lucide="shield-alert" class="w-4 h-4 text-red-500 animate-pulse shrink-0"></i>
+      <span id="api-status-text">Connection error to ExpirySense backend. Monitoring offline.</span>
+    </div>
+
+    <!-- Bottom Row: Dynamic Results table -->
+    <section class="bg-[#0B0F1A]/50 border border-slate-800 rounded-lg flex flex-col overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-850 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <span class="text-cyan-500">◈</span>
+            SSL CERTIFICATE STATUS LOG
+          </h2>
+          <p class="text-[10px] font-mono uppercase tracking-wider text-slate-500 mt-1">Live scan records stored in SQLite database. Automatically persists state.</p>
+        </div>
+        
+        <div class="flex items-center gap-3">
+          <div class="text-[10px] font-mono text-slate-400 bg-slate-950 px-2.5 py-1.5 border border-slate-800 rounded flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></span>
+            Scan Sync: Connected
+          </div>
+          <button id="btn-refresh" class="p-2 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800 rounded transition cursor-pointer" title="Refresh Log">
+            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Results Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-800/50 text-slate-400 text-[10px] font-bold uppercase tracking-wider border-b border-slate-850">
+              <th class="px-6 py-3.5 font-semibold">Hostname</th>
+              <th class="px-6 py-3.5 font-semibold">Status / Expiry Status</th>
+              <th class="px-6 py-3.5 font-semibold">Issuer</th>
+              <th class="px-6 py-3.5 font-semibold">Days Left</th>
+              <th class="px-6 py-3.5 font-semibold">Expiry Date</th>
+              <th class="px-6 py-3.5 font-semibold">TLS Protocol</th>
+              <th class="px-6 py-3.5 font-semibold text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="results-table-body" class="divide-y divide-slate-800/60 font-mono text-xs">
+            <!-- Row Placeholder (Empty State) -->
+            <tr id="rows-empty-state">
+              <td colspan="7" class="px-6 py-16 text-center text-slate-500">
+                <div class="flex flex-col items-center justify-center gap-2">
+                  <div class="p-4 bg-[#050810] border border-slate-800 rounded-full text-slate-600 mb-2">
+                    <i data-lucide="search" class="w-8 h-8 text-cyan-400 opacity-60"></i>
+                  </div>
+                  <p class="font-medium text-slate-400 text-sm">No hostnames scanned yet</p>
+                  <p class="text-xs max-w-sm leading-relaxed text-slate-500">Enter websites or upload a bulk CSV document above to execute real-time scanning & generate AI reports.</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer Info Bar -->
+      <div class="bg-slate-900 border-t border-slate-800 p-3 px-6 flex justify-between items-center text-[10px] text-slate-500 font-mono">
+        <div>SCAN RESULTS PERSISTED IN SQLITE DB</div>
+        <div class="flex items-center gap-4">
+          <span class="hidden sm:inline">LAST ENGINE SCAN: SYNCHRONIZED</span>
+          <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> MCP SERVER ACTIVE</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-900 bg-slate-950 py-6 px-6 mt-12 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 font-mono">
+      <p>ExpirySense &bull; Real-Time TLS Verification</p>
+      <p class="text-slate-600">Model Context Protocol (MCP) Server Layer &bull; llama3-8b-8192 Enabled</p>
+    </div>
+  </footer>
+
+  <!-- Scan progress Modal overlay -->
+  <div id="modal-loader" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center hidden transition-all duration-300">
+    <div class="bg-slate-900 border border-slate-850 rounded p-8 max-w-md w-full flex flex-col items-center text-center shadow-2xl relative overflow-hidden">
+      <div class="absolute inset-0 bg-gradient-to-tr from-cyan-500/5 via-transparent to-amber-500/5"></div>
+      <div class="relative w-16 h-16 flex items-center justify-center mb-5">
+        <!-- Spinning glowing ring -->
+        <div class="absolute inset-0 border-4 border-slate-800 border-t-cyan-500 rounded-full animate-spin"></div>
+        <i data-lucide="server" class="w-6 h-6 text-cyan-400 animate-pulse"></i>
+      </div>
+      <h3 class="text-lg font-bold text-white relative uppercase tracking-wider">Analyzing Secure Socket Layers</h3>
+      <p id="loader-message" class="text-xs text-slate-400 mt-2 max-w-xs leading-relaxed relative">Establishing authentic TLS connections, decoding certificate metadata, and querying the Groq LLM inference system...</p>
+      
+      <!-- Staggered sub-states logs -->
+      <div class="w-full bg-[#050810] border border-slate-800/80 rounded p-3.5 mt-5 text-[11px] font-mono text-left text-slate-500 flex flex-col gap-1.5">
+        <div id="log-dns" class="flex items-center gap-1.5"><i data-lucide="clock" class="w-3.5 h-3.5"></i> Resolve Domain Name Services...</div>
+        <div id="log-ssl" class="flex items-center gap-1.5"><i data-lucide="clock" class="w-3.5 h-3.5"></i> Negotiate Cryptographic Handshake...</div>
+        <div id="log-groq" class="flex items-center gap-1.5"><i data-lucide="clock" class="w-3.5 h-3.5"></i> Compute Groq llama3 Incident Analysis...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="modal-confirm" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center hidden transition-all duration-300">
+    <div class="bg-slate-900 border border-slate-850 rounded p-6 max-w-sm w-full flex flex-col gap-4 shadow-2xl relative">
+      <div class="flex items-start gap-3">
+        <div class="p-2 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-lg">
+          <i data-lucide="trash-2" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-white uppercase tracking-wider font-mono">Delete Hostname?</h3>
+          <p class="text-xs text-slate-400 mt-1 leading-relaxed">Are you absolutely sure you want to remove <span id="confirm-hostname-span" class="font-mono text-white bg-slate-950 px-1 py-0.5 rounded border border-slate-800">example.com</span> from the database? This action is irreversible.</p>
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-3 mt-2 font-mono">
+        <button id="btn-confirm-cancel" class="px-4 py-2 border border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-white rounded text-xs font-semibold cursor-pointer transition">
+          Keep Domain
+        </button>
+        <button id="btn-confirm-delete" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded text-xs font-semibold cursor-pointer transition">
+          Delete Forever
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Client Notifications system (floating bottom right) -->
+  <div id="toast-container" class="fixed bottom-6 right-6 flex flex-col gap-3 z-50 pointer-events-none"></div>
+
+  <!-- Custom JavaScript Entry -->
+  <script src="/frontend/app.js"></script>
+</body>
+</html>
+

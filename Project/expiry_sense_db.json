@@ -1,0 +1,110 @@
+[
+  {
+    "id": 1,
+    "hostname": "vsbec.com",
+    "issuer": null,
+    "expiry_date": null,
+    "days_remaining": -1,
+    "tls_version": null,
+    "status": "UNREACHABLE",
+    "failure_reason": "Connection Timeout",
+    "last_scan": "2026-06-10T15:32:28.532Z",
+    "created_at": "2026-06-10T15:31:55.223Z"
+  },
+  {
+    "id": 2,
+    "hostname": "amazon.com",
+    "issuer": "GeoTrust TLS RSA CA G1",
+    "expiry_date": "2026-11-18T23:59:59.000Z",
+    "days_remaining": 161,
+    "tls_version": "TLSv1.3",
+    "status": "HEALTHY",
+    "failure_reason": null,
+    "last_scan": "2026-06-10T15:32:31.931Z",
+    "created_at": "2026-06-10T15:32:31.931Z"
+  },
+  {
+    "id": 3,
+    "hostname": "wrong.host.badssl.com",
+    "issuer": "R13",
+    "expiry_date": "2026-08-24T20:02:49.000Z",
+    "days_remaining": 75,
+    "tls_version": "TLSv1.2",
+    "status": "HEALTHY",
+    "failure_reason": null,
+    "last_scan": "2026-06-10T15:33:57.583Z",
+    "created_at": "2026-06-10T15:33:57.583Z"
+  },
+  {
+    "id": 4,
+    "hostname": "google.com",
+    "issuer": "WE2",
+    "expiry_date": "2026-08-10T18:35:27.000Z",
+    "days_remaining": 61,
+    "tls_version": "TLSv1.3",
+    "status": "HEALTHY",
+    "failure_reason": null,
+    "last_scan": "2026-06-10T15:33:57.815Z",
+    "created_at": "2026-06-10T15:33:57.815Z"
+  },
+  {
+    "id": 5,
+    "hostname": "github.com",
+    "issuer": "Sectigo Public Server Authentication CA DV E36",
+    "expiry_date": "2026-08-02T23:59:59.000Z",
+    "days_remaining": 53,
+    "tls_version": "TLSv1.3",
+    "status": "HEALTHY",
+    "failure_reason": null,
+    "last_scan": "2026-06-10T15:33:58.009Z",
+    "created_at": "2026-06-10T15:33:58.009Z"
+  },
+  {
+    "id": 6,
+    "hostname": "stackoverflow.com",
+    "issuer": "E7",
+    "expiry_date": "2026-07-18T13:32:17.000Z",
+    "days_remaining": 37,
+    "tls_version": "TLSv1.3",
+    "status": "WARNING",
+    "failure_reason": null,
+    "last_scan": "2026-06-10T15:33:58.254Z",
+    "created_at": "2026-06-10T15:33:58.254Z"
+  },
+  {
+    "id": 7,
+    "hostname": "openai.com",
+    "issuer": "YE1",
+    "expiry_date": "2026-08-26T19:33:25.000Z",
+    "days_remaining": 77,
+    "tls_version": "TLSv1.3",
+    "status": "HEALTHY",
+    "failure_reason": null,
+    "last_scan": "2026-06-10T15:33:58.629Z",
+    "created_at": "2026-06-10T15:33:58.629Z"
+  },
+  {
+    "id": 8,
+    "hostname": "microsoft.com",
+    "issuer": "Microsoft TLS G2 RSA CA OCSP 16",
+    "expiry_date": "2026-11-08T23:30:11.000Z",
+    "days_remaining": 151,
+    "tls_version": "TLSv1.3",
+    "status": "HEALTHY",
+    "failure_reason": null,
+    "last_scan": "2026-06-10T15:33:59.106Z",
+    "created_at": "2026-06-10T15:33:59.106Z"
+  },
+  {
+    "id": 9,
+    "hostname": "expired.badssl.com",
+    "issuer": "COMODO RSA Domain Validation Secure Server CA",
+    "expiry_date": "2015-04-12T23:59:59.000Z",
+    "days_remaining": -4077,
+    "tls_version": "TLSv1.2",
+    "status": "CRITICAL",
+    "failure_reason": null,
+    "last_scan": "2026-06-10T15:34:00.917Z",
+    "created_at": "2026-06-10T15:34:00.917Z"
+  }
+]
